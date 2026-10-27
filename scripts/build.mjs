@@ -1,0 +1,11 @@
+import fs from 'node:fs';
+import path from 'node:path';
+const root=path.resolve(import.meta.dirname,'..');
+const assets={};for(const [name,type] of [['index.html','text/html; charset=utf-8'],['style.css','text/css; charset=utf-8'],['app.js','text/javascript; charset=utf-8'],['collection.js','text/javascript; charset=utf-8'],['enhancements.js','text/javascript; charset=utf-8']])assets['/'+name]={type,body:fs.readFileSync(path.join(root,'web',name),'utf8')};
+const manifest=JSON.parse(fs.readFileSync(path.join(root,'.openai/hosting.json'),'utf8'));delete manifest.static;
+assets['/style.css'].body+='\n'+fs.readFileSync(path.join(root,'web/enhancements.css'),'utf8');
+fs.writeFileSync(path.join(root,'.openai/hosting.json'),JSON.stringify(manifest,null,2)+'\n');
+fs.mkdirSync(path.join(root,'dist/server'),{recursive:true});fs.mkdirSync(path.join(root,'dist/.openai'),{recursive:true});
+fs.writeFileSync(path.join(root,'dist/server/index.js'),'const ASSETS='+JSON.stringify(assets)+';\n'+fs.readFileSync(path.join(root,'worker/index.js'),'utf8'));
+fs.writeFileSync(path.join(root,'dist/.openai/hosting.json'),JSON.stringify(manifest,null,2)+'\n');
+console.log('Built protected Worker with embedded assets');

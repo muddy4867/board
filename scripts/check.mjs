@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';import fs from 'node:fs';
+const source=fs.readFileSync(new URL('../dist/server/index.js',import.meta.url),'utf8');const worker=(await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'))).default;
+const env={PORTFOLIO_PASSWORD:'qa-password-only',PORTFOLIO_SESSION_SECRET:'qa-session-secret-only'};
+const req=(path,opts={})=>new Request('https://test.example'+path,opts);
+assert.equal((await worker.fetch(req('/'),env)).status,200);
+for(const path of ['/app.js','/collection.js','/index.html/','/server/index.js'])assert.equal((await worker.fetch(req(path),env)).status,401);
+assert.equal((await worker.fetch(req('/unlock',{method:'POST',headers:{origin:'https://evil.example'},body:new URLSearchParams({password:env.PORTFOLIO_PASSWORD})}),env)).status,403);
+assert.equal((await worker.fetch(req('/unlock',{method:'POST',headers:{origin:'https://test.example'},body:new URLSearchParams({password:'wrong'})}),env)).status,401);
+const login=await worker.fetch(req('/unlock',{method:'POST',headers:{origin:'https://test.example'},body:new URLSearchParams({password:env.PORTFOLIO_PASSWORD})}),env);assert.equal(login.status,303);const cookie=login.headers.get('set-cookie').split(';')[0];assert(login.headers.get('set-cookie').includes('HttpOnly'));
+const page=await worker.fetch(req('/',{headers:{cookie}}),env);assert.equal(page.status,200);assert((await page.text()).includes('enhancements.js'));
+assert.equal((await worker.fetch(req('/collection.js',{headers:{cookie}}),env)).status,200);
+assert.equal((await worker.fetch(req('/app.js',{headers:{cookie:cookie+'x'}}),env)).status,401);
+assert.equal((await worker.fetch(req('/app.js',{headers:{cookie,'oai-authenticated-user-id':'someone-else'}}),env)).status,401);
+const logout=await worker.fetch(req('/lock',{method:'POST',headers:{origin:'https://test.example',cookie}}),env);assert(logout.headers.get('set-cookie').includes('Max-Age=0'));
+for(let i=0;i<5;i++)await worker.fetch(req('/unlock',{method:'POST',headers:{origin:'https://test.example','oai-authenticated-user-id':'locked-test'},body:new URLSearchParams({password:'wrong'})}),env);
+assert.equal((await worker.fetch(req('/unlock',{method:'POST',headers:{origin:'https://test.example','oai-authenticated-user-id':'locked-test'},body:new URLSearchParams({password:env.PORTFOLIO_PASSWORD})}),env)).status,429);
+console.log('PASS: locked assets, password, origin, signed cookie, account binding, logout, throttling, no production password in artifact');
