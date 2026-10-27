@@ -45,3 +45,7 @@ Cloudflare Workers 호환 ESM Worker입니다. `npm run build` 결과는 `dist/s
 - `scripts/build.mjs`: 화면 파일을 Worker에 포함해 빌드
 - `scripts/check.mjs`: 인증·접근 차단·잠금 검사
 - `.openai/hosting.json`: 기존 Sites 배포 연결 정보
+
+## GitHub Pages 정적 배포
+
+`node scripts/build-pages.mjs`로 `docs/`를 생성합니다. GitHub Settings → Pages에서 Deploy from a branch, `main`, `/docs`를 선택합니다. 이 공개 정적 버전에는 로그인·잠금 기능이 없습니다. 프로젝트 수정 사항은 각 브라우저에 저장됩니다.
