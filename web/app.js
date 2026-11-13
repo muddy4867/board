@@ -1,4 +1,6 @@
 const projectPreviews = new Map([
+  ['https://maegok-mbti-keyring.muddy4867.chatgpt.site', './previews/keyring.png'],
+  ['https://dokdo-signal-escape.muddy4867.chatgpt.site', './previews/signal.png'],
   ['https://class-news-studio-1027.muddy4867.chatgpt.site', './previews/news.png'],
   ['https://dokdo-record-rescue-jahyun.muddy4867.chatgpt.site', './previews/dokdo.png'],
   ['https://haneul-afterschool-2026.muddy4867.chatgpt.site', './previews/school.png'],
